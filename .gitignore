@@ -1,0 +1,6 @@
+bin/
+.vscode/
+obj/
+SDL3.dll
+makefile
+WizASM.make
