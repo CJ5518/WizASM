@@ -6,6 +6,7 @@
 #include "cj3d/VertexArray.hpp"
 #include "cj3d/VertexBuffer.hpp"
 #include "cj3d/Shader.hpp"
+#include "cj3d/Camera.hpp"
 
 struct Vertex {
 	glm::vec3 position;
@@ -67,27 +68,50 @@ int main() {
 	VAO.setBufferAttribute(sizeof(glm::vec2));
 	VAO.flushAttributes();
 
+	glm::mat4 modelMatrix = glm::identity<glm::mat4>();
+
 	cj::Shader shader;
 	shader.loadFromFiles("shaders/vertex.glsl", "shaders/frag.glsl");
 	shader.use();
+	
+
+	cj::Camera camera;
 
 	bool keepRunning = true;
+	Uint64 frameStart;
+	Uint64 lastStart = SDL_GetTicks() - 1;
 	while (keepRunning) {
+		frameStart = SDL_GetTicks();
+		Uint64 frameDiffMillis = frameStart - lastStart;
+		lastStart = frameStart;
 		//Check events
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_EVENT_QUIT) {
 				keepRunning = false;
 				break;
 			}
+			camera.processEvent(event);
 		}
+		camera.fixedUpdate();
+		camera.variableUpdate(frameDiffMillis / 1000.0f);
 
 		//Draw stuff
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		modelMatrix = glm::rotate(modelMatrix, 0.01f, glm::vec3(1.0f,0,0));
+		shader.setMat4("modelMatrix", modelMatrix);
+		shader.setMat4("pv", glm::perspective(3.14f / 2.0f, 4.0f/3.0f,0.001f, 100.0f));
+		SDL_MouseButtonFlags mouseButtons = SDL_GetMouseState(NULL,NULL);
+		printf("Mouse: %x\n", mouseButtons);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		//End of drawing stuff
 		SDL_GL_SwapWindow(window);
+
+
+		if (SDL_GetTicks() - frameStart < 16) {
+			SDL_Delay(16 - (SDL_GetTicks() - frameStart));
+		}
 	}
 
 

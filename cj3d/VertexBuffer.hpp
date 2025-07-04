@@ -39,7 +39,7 @@ namespace cj {
 		void create(void* list, size_t nItems, size_t itemSize) {
 			if (!m_id)
 				glGenBuffers(1, &m_id);
-
+				
 			glBindBuffer(GL_ARRAY_BUFFER, m_id);
 			glBufferData(GL_ARRAY_BUFFER, nItems * itemSize, list, usageToGlEnum(m_usage));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
