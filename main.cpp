@@ -4,7 +4,7 @@
 #include "stdio.h"
 #include "glm/glm.hpp"
 #include "cj3d/VertexArray.hpp"
-#include "cj3d/VertexBuffer.hpp"
+#include "cj3d/BufferObject.hpp"
 #include "cj3d/Shader.hpp"
 #include "cj3d/Camera.hpp"
 
@@ -48,20 +48,35 @@ int main() {
 	glDepthFunc(GL_LESS);
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-	//Set up the triangle
-	Vertex triangle[3];
-	triangle[0].position = glm::vec3(-0.5f, -0.5f, 0.0f);
-	triangle[1].position = glm::vec3(0.5f, -0.5f, 0.0f);
-	triangle[2].position = glm::vec3(0.0f, 0.5f, 0.0f);
+	float vertexData[] = {
+     0.5f,  0.5f, 0.0f,  // top right
+     0.5f, -0.5f, 0.0f,  // bottom right
+    -0.5f, -0.5f, 0.0f,  // bottom left
+    -0.5f,  0.5f, 0.0f   // top left 
+};
+unsigned int indices[] = {  // note that we start from 0!
+    0, 1, 3,   // first triangle
+    1, 2, 3    // second triangle
+};  
+	//Set up the triangles
+	Vertex vertices[4];
+	for (int q = 0; q < 4; q++) {
+		int i = q * 3;
+		vertices[q].position = glm::vec3(vertexData[i],vertexData[i+1],vertexData[i+2]);
+	}
 
 	cj::VertexArray VAO;
-	cj::VertexBuffer<Vertex> VBO;
+	cj::BufferObject<Vertex> VBO = cj::BufferObject<Vertex>(cj::BufferType::VertexBuffer, cj::BufferUsage::Static);
+	cj::BufferObject<int> EBO = cj::BufferObject<int>(cj::BufferType::ElementBuffer, cj::BufferUsage::Static);
 
 	VAO.create();
 	VAO.bind();
 
-	VBO.create(&triangle, 3, 3 * sizeof(Vertex));
+	VBO.create(&vertices, 4);
 	VBO.bind();
+
+	EBO.create(&indices, 6);
+	EBO.bind();
 
 	VAO.setBufferAttribute(sizeof(glm::vec3));
 	VAO.setBufferAttribute(sizeof(glm::vec3));
@@ -103,7 +118,7 @@ int main() {
 		shader.setMat4("pv", glm::perspective(3.14f / 2.0f, 4.0f/3.0f,0.001f, 100.0f));
 		SDL_MouseButtonFlags mouseButtons = SDL_GetMouseState(NULL,NULL);
 		printf("Mouse: %x\n", mouseButtons);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		//End of drawing stuff
 		SDL_GL_SwapWindow(window);

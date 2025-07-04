@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <GL/glew.h>
-#include "VertexBuffer.hpp"
 
 namespace cj {
 	//Wrapper around opengls vertex array
