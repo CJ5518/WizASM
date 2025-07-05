@@ -12,7 +12,7 @@ namespace cj {
 	public:
 		Camera() {
 			front = glm::vec3(0, 0, 1);
-			position = glm::vec3(0, 0, -3);
+			position = glm::vec3(0, 0, 3);
 			upVector = glm::vec3(0, 1, 0);
 			viewMatrix = glm::identity<glm::mat4>();
 		};

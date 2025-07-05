@@ -42,13 +42,16 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	//Draws in wireframe
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	
 	cj::Model model;
-	model.loadModel();
-
+	
+	//model.loadModel();
+	model.loadModelFromObj("cube.obj");
+	model.modelMatrix = glm::translate(model.modelMatrix, glm::vec3(0.0f,0,1.0f));
 	cj::Camera camera;
+	camera.sensitivity = 0.1f;
 
 	bool keepRunning = true;
 	Uint64 frameStart;
@@ -71,9 +74,10 @@ int main() {
 		//Draw stuff
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		model.modelMatrix = glm::rotate(model.modelMatrix, 0.01f, glm::vec3(1.0f,0,0));
-		model.shader.setMat4("modelMatrix", model.modelMatrix);
-		model.shader.setMat4("pv", glm::perspective(3.14f / 2.0f, 4.0f/3.0f,0.001f, 100.0f));
+		//model.modelMatrix = glm::rotate(model.modelMatrix, 0.01f, glm::vec3(1.0f,0,0));
+		model.shader.setMat4("modelMatrix", glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+		model.shader.setMat4("proj", glm::perspective(glm::radians(45.0f), (float)640 / (float)480, 0.1f, 1000.0f));
+		model.shader.setMat4("view", camera.viewMatrix);
 		model.draw();
 
 		//End of drawing stuff

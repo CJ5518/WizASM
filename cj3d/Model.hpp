@@ -2,6 +2,9 @@
 #define CJ_MODEL_HPP
 
 #include <vector>
+#include <string>
+#include <fstream>
+#include <sstream>
 #include "glm/glm.hpp"
 #include "VertexArray.hpp"
 #include "BufferObject.hpp"
@@ -21,7 +24,7 @@ namespace cj {
 	public:
 		cj::VertexArray VAO;
 		cj::BufferObject<Vertex> VBO = cj::BufferObject<Vertex>(cj::BufferType::VertexBuffer, cj::BufferUsage::Static);
-		cj::BufferObject<int> EBO = cj::BufferObject<int>(cj::BufferType::ElementBuffer, cj::BufferUsage::Static);
+		cj::BufferObject<unsigned int> EBO = cj::BufferObject<unsigned int>(cj::BufferType::ElementBuffer, cj::BufferUsage::Static);
 		glm::mat4 modelMatrix = glm::identity<glm::mat4>();
 		cj::Shader shader;
 
@@ -60,10 +63,68 @@ namespace cj {
 			shader.use();
 		}
 
+		void loadModelFromObj(std::string filename) {
+			std::vector<Vertex> vertexData;
+			std::vector<unsigned int> indices;
+
+			std::ifstream infile(filename);
+			std::string line;
+			while (std::getline(infile, line)) {
+				std::istringstream iss(line);
+				std::string lineType;
+				iss >> lineType;
+				if (lineType == "v") {
+					float x,y,z;
+					iss >> x >> y >> z;
+					Vertex vert;
+					vert.position = glm::vec3(x,y,z);
+					vertexData.push_back(vert);
+				} else if (lineType == "f") {
+					int vertId, texId, normId;
+					int vertexCount = 0;
+					do {
+						vertexCount++;
+						iss >> vertId;
+						iss.ignore(1);
+						iss >> texId;
+						iss.ignore(1);
+						iss >> normId;
+						iss.ignore(1);
+						indices.push_back(vertId-1);
+					} while(!iss.eof());
+					if (vertexCount != 3) {
+						std::cout << "Obj file " << filename << " isn't triangulated please fix that!\n";
+						abort();
+					}
+				}
+			}
+			
+
+			//A lot of this is copy pasted should fix that
+			VAO.create();
+			VAO.bind();
+
+			VBO.create(vertexData.data(), vertexData.size());
+			VBO.bind();
+
+			EBO.create(indices.data(), indices.size());
+			EBO.bind();
+
+			VAO.setBufferAttribute(sizeof(glm::vec3));
+			VAO.setBufferAttribute(sizeof(glm::vec3));
+			VAO.setBufferAttribute(sizeof(glm::vec2));
+			VAO.setBufferAttribute(sizeof(glm::vec4));
+			VAO.flushAttributes();
+
+			shader.loadFromFiles("shaders/vertex.glsl", "shaders/frag.glsl");
+			shader.use();
+
+		}
+
 		void draw() {
 			shader.use();
 			VAO.bind();
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_TRIANGLES, EBO.getItemCount(), GL_UNSIGNED_INT, 0);
 		}
 
 		void destroy() {
